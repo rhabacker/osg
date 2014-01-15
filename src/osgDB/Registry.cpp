@@ -1259,6 +1259,10 @@ ReaderWriter::ReadResult Registry::readImplementation(const ReadFunctor& readFun
 
     if (useObjectCache)
     {
+        // objects may have different options
+        if (!options->getOptionString().empty())
+            file += std::string("[") + options->getOptionString() + std::string("]");
+
         // search for entry in the object cache.
         osg::ref_ptr<osg::Object> object = optionsCache ? optionsCache->getRefFromObjectCache(file) : 0;
 
