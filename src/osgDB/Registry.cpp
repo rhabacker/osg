@@ -1224,16 +1224,21 @@ ReaderWriter::ReadResult Registry::readImplementation(const ReadFunctor& readFun
 {
     std::string file(readFunctor._filename);
 
+    const Options* options=readFunctor._options;
+
     bool useObjectCache=false;
     //Note CACHE_ARCHIVES has a different object that it caches to so it will never be used here
     if (cacheHint!=Options::CACHE_ARCHIVES)
     {
-        const Options* options=readFunctor._options;
         useObjectCache=options ? (options->getObjectCacheHint()&cacheHint)!=0: false;
     }
 
     if (useObjectCache)
     {
+        // objects may have different options
+        if (!options->getOptionString().empty())
+            file += std::string("[") + options->getOptionString() + std::string("]");
+
         // search for entry in the object cache.
         {
             OpenThreads::ScopedLock<OpenThreads::Mutex> lock(_objectCacheMutex);
