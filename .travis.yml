@@ -11,7 +11,7 @@ compiler:
 before_script:
     - cmake -DOSG_USE_AGGRESSIVE_WARNINGS=0 .
 
-script: make
+script: if [ "${COVERITY_SCAN_BRANCH}" != 1 ]; then make ; fi
 
 addons:
   coverity_scan:
