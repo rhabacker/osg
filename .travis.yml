@@ -1,0 +1,24 @@
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "Hs4uOpT5baqvud5Is0TShPzulK/DNsa8WkebyaIPsENT7q4+KGPYaVj9W0p8pWscp0xKWogzKjwmmfpWU7LJEtplXk1GLzSW9l7PoKmvN3dpWN5tvHdX5laHsudDrSlU/+62S4zq6t0FpiLGhmOp0bjffKeSSxprpTE9OwZyecaM12ADnNT1D+pPYe18jGC05Bs9R5Idt1oJq2N1Z+XYok5VdUML7O0qSBf/zq2IY0L+UhtGE056oSMe0st0gfLv0iN845SaNaY+F9GBZZlaEo0wKkqzpfqjjqMsQ96z+iWiovVkL07klmdiy7tbz8dOkpBjPaMDP9oYsKkhx/8HZWOYFelDJsUdOgdNkkSxMnq7H774TFplVU4mNn+nt4EFMN4IGjZzeoWuX6+3Ut/ew5h3v9dEiH9TF03bc5kzpEM+sBg9z1654PUOQGzPRaQXRqLuEFcj+O4jEdF1mAqvOwDg9fihY3P4c6SVaLTu0HfERT0nU9BDaRTAnOQVW3768oPR2WSSpYrG1MR1kHS6U8ODTkGAitbdmBJKorGzIfbjJW3XS5OVOnkodfMKJAt2qhG/8RY+vGpy5GJwJZMArigt4bXlvLNizCTSFhK3WYjxL/hqUrOWg7n1Jz4sHcOyXJ8jfTW1elO5KZweJbqpJibtGkOVE8KCtcOBJwQmU/4="
+
+language: cpp
+compiler:
+    - clang
+
+before_script:
+    - cmake -DOSG_USE_AGGRESSIVE_WARNINGS=0 .
+
+script: make
+
+addons:
+  coverity_scan:
+    project:
+      name: "rhabacker/osg"
+      description: "Openscenegraph"
+    notification_email: ralf.habacker@freenet.de
+    build_command_prepend: cmake -DOSG_USE_AGGRESSIVE_WARNINGS=0 .
+    build_command:  make
+    branch_pattern: coverity_scan
