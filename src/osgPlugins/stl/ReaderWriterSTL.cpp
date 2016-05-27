@@ -372,8 +372,10 @@ private:
 // Register with Registry to instantiate the above reader/writer.
 REGISTER_OSGPLUGIN(stl, ReaderWriterSTL)
 
-struct StlHeader
+class StlHeader
 {
+public:
+    StlHeader() : numFacets(0) { text[0] = '\0'; }
     char text[80];
     unsigned int numFacets;
 };
