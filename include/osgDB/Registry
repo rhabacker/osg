@@ -376,11 +376,8 @@ class OSGDB_EXPORT Registry : public osg::Referenced
         void setCreateNodeFromImage(bool flag) { _createNodeFromImage = flag; }
         bool getCreateNodeFromImage() const { return _createNodeFromImage; }
 
-
-        void setOptions(Options* opt) { _options = opt; }
-        Options* getOptions() { return _options.get(); }
-        const Options*  getOptions() const { return _options.get(); }
-
+        void setOptions(Options* opt, const std::string &fileName=std::string()) { _options[fileName] = opt; }
+        Options* getOptions(const std::string &fileName=std::string()) { return _options[fileName].get(); }
 
         /** initialize both the Data and Library FilePaths, by default called by the
           * constructor, so it should only be required if you want to force
@@ -623,7 +620,7 @@ class OSGDB_EXPORT Registry : public osg::Referenced
         static std::string trim( const std::string& str );
 
         // options to pass to reader writers.
-        osg::ref_ptr<Options>     _options;
+        std::map<std::string, osg::ref_ptr<Options> > _options;
 
         FilePathList                            _dataFilePath;
         FilePathList                            _libraryFilePath;
