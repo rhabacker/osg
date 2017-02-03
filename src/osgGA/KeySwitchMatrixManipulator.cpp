@@ -181,9 +181,8 @@ bool KeySwitchMatrixManipulator::handle(const GUIEventAdapter& ea,GUIActionAdapt
 
     bool handled = false;
 
-    if (!ea.getHandled() && ea.getEventType()==GUIEventAdapter::KEYDOWN)
+    if (!ea.getHandled() && ea.getEventType()==GUIEventAdapter::KEYDOWN && ea.getModKeyMask() == 0)
     {
-
         KeyManipMap::iterator it=_manips.find(ea.getKey());
         if(it != _manips.end())
         {
