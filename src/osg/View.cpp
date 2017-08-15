@@ -17,6 +17,8 @@
 
 using namespace osg;
 
+View::ViewList View::_views;
+
 View::View():
     Object(true)
 {
@@ -47,12 +49,15 @@ View::View(const osg::View& view, const osg::CopyOp& copyop):
     _camera(view._camera),
     _slaves(view._slaves)
 {
+    _views.push_back(this);
 }
 
 
 View::~View()
 {
     OSG_INFO<<"Destructing osg::View"<<std::endl;
+
+    _views.remove(this);
 
     if (_camera.valid())
     {
