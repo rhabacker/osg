@@ -39,17 +39,23 @@ public:
     };
 
     typedef std::map<int, osg::ref_ptr<osg::StateSet> > StateSetMap;
+    typedef std::map<int, enum StateMask> TextureUnitsMap;
 
-    ShaderGenCache() {};
+    ShaderGenCache(const TextureUnitsMap &textureUnits = TextureUnitsMap())
+      : _textureUnits(textureUnits)
+    {
+    }
 
     void setStateSet(int stateMask, osg::StateSet *program);
     osg::StateSet *getStateSet(int stateMask) const;
     osg::StateSet *getOrCreateStateSet(int stateMask);
+    TextureUnitsMap &getTextureUnits();
 
 protected:
     osg::StateSet *createStateSet(int stateMask) const;
     mutable OpenThreads::Mutex _mutex;
     StateSetMap _stateSetMap;
+    TextureUnitsMap _textureUnits;
 
 };
 

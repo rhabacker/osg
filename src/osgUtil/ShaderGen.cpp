@@ -110,6 +110,11 @@ osg::StateSet *ShaderGenCache::getOrCreateStateSet(int stateMask)
     return it->second.get();
 }
 
+ShaderGenCache::TextureUnitsMap &ShaderGenCache::getTextureUnits()
+{
+    return _textureUnits;
+}
+
 osg::StateSet *ShaderGenCache::createStateSet(int stateMask) const
 {
     osg::StateSet *stateSet = new osg::StateSet;
@@ -139,21 +144,24 @@ osg::StateSet *ShaderGenCache::createStateSet(int stateMask) const
     frag << vert.str();
 
     // write uniforms and attributes
-    int unit = 0;
-    if (stateMask & DIFFUSE_MAP)
+    TextureUnitsMap::const_iterator it = _textureUnits.begin();
+    for (; it != _textureUnits.end(); it++)
     {
-        osg::Uniform *diffuseMap = new osg::Uniform("diffuseMap", unit++);
-        stateSet->addUniform(diffuseMap);
-        frag << "uniform sampler2D diffuseMap;\n";
-    }
+        if (it->second == DIFFUSE_MAP && stateMask & DIFFUSE_MAP)
+        {
+            osg::Uniform *diffuseMap = new osg::Uniform("diffuseMap", it->first);
+            stateSet->addUniform(diffuseMap);
+            frag << "uniform sampler2D diffuseMap;\n";
+        }
 
-    if (stateMask & NORMAL_MAP)
-    {
-        osg::Uniform *normalMap = new osg::Uniform("normalMap", unit++);
-        stateSet->addUniform(normalMap);
-        frag << "uniform sampler2D normalMap;\n";
-        program->addBindAttribLocation("tangent", 6);
-        vert << "attribute vec3 tangent;\n";
+        if (it->second == NORMAL_MAP && stateMask & NORMAL_MAP)
+        {
+            osg::Uniform *normalMap = new osg::Uniform("normalMap", it->first);
+            stateSet->addUniform(normalMap);
+            frag << "uniform sampler2D normalMap;\n";
+            program->addBindAttribLocation("tangent", 6);
+            vert << "attribute vec3 tangent;\n";
+        }
     }
 
     vert << "\n"\
@@ -370,12 +378,25 @@ void ShaderGenVisitor::update(osg::Drawable *drawable)
         stateMask |= ShaderGenCache::LIGHTING;
     if (state->getMode(GL_FOG) & osg::StateAttribute::ON)
         stateMask |= ShaderGenCache::FOG;
-    if (state->getTextureAttribute(0, osg::StateAttribute::TEXTURE))
-        stateMask |= ShaderGenCache::DIFFUSE_MAP;
 
-    if (state->getTextureAttribute(1, osg::StateAttribute::TEXTURE) && geometry!=0 &&
-        geometry->getVertexAttribArray(6)) //tangent
-        stateMask |= ShaderGenCache::NORMAL_MAP;
+    ShaderGenCache::TextureUnitsMap &_textureUnits = _stateCache->getTextureUnits();
+    if (_textureUnits.empty())
+    {
+        if (state->getTextureAttribute(0, osg::StateAttribute::TEXTURE))
+            stateMask |= ShaderGenCache::DIFFUSE_MAP;
+        if (state->getTextureAttribute(1, osg::StateAttribute::TEXTURE) && geometry!=0 &&
+                geometry->getVertexAttribArray(6)) //tangent
+            stateMask |= ShaderGenCache::NORMAL_MAP;
+    }
+    else
+    {
+        ShaderGenCache::TextureUnitsMap::const_iterator it = _textureUnits.begin();
+        for (;it != _textureUnits.end(); it++)
+        {
+            if (state->getTextureAttribute(it->first, osg::StateAttribute::TEXTURE))
+                stateMask |= it->second;
+        }
+    }
 
     // Get program and uniforms for accumulated state.
     osg::StateSet *progss = _stateCache->getOrCreateStateSet(stateMask);
@@ -394,6 +415,18 @@ void ShaderGenVisitor::update(osg::Drawable *drawable)
     {
         ss->removeMode(GL_FOG);
     }
-    if ((stateMask&ShaderGenCache::DIFFUSE_MAP)!=0) ss->removeTextureMode(0, GL_TEXTURE_2D);
-    if ((stateMask&ShaderGenCache::NORMAL_MAP)!=0) ss->removeTextureMode(1, GL_TEXTURE_2D);
+    if (_textureUnits.empty())
+    {
+        if ((stateMask&ShaderGenCache::DIFFUSE_MAP)!=0) ss->removeTextureMode(0, GL_TEXTURE_2D);
+        if ((stateMask&ShaderGenCache::NORMAL_MAP)!=0) ss->removeTextureMode(1, GL_TEXTURE_2D);
+    }
+    else
+    {
+        ShaderGenCache::TextureUnitsMap::const_iterator it = _textureUnits.begin();
+        for (;it != _textureUnits.end(); it++)
+        {
+            if ((stateMask & it->second)!=0)
+                ss->removeTextureMode(it->first, GL_TEXTURE_2D);
+        }
+    }
 }
