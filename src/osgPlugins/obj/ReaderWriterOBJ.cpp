@@ -42,6 +42,7 @@
 #include <osgDB/FileNameUtils>
 
 #include <osgUtil/TriStripVisitor>
+#include <osgUtil/ShaderGen>
 #include <osgUtil/SmoothingVisitor>
 #include <osgUtil/Tessellator>
 
@@ -900,7 +901,43 @@ osgDB::ReaderWriter::ReadResult ReaderWriterOBJ::readNode(const std::string& fil
 
         ObjOptionsStruct localOptions = parseOptions(options);
 
+        // create texture unit assignment map for ShaderGenCache
+        osgUtil::ShaderGenCache::TextureUnitsMap map;
+        if (localOptions.textureUnitAllocation.size() > 0)
+        {
+            for(unsigned int i=0;i<localOptions.textureUnitAllocation.size();i++)
+            {
+                // firstly, get the option set pair
+                int unit = localOptions.textureUnitAllocation[i].first;
+                obj::Material::Map::TextureMapType type = localOptions.textureUnitAllocation[i].second;
+                switch(type)
+                {
+                    case obj::Material::Map::DIFFUSE:
+                        map[unit] = osgUtil::ShaderGenCache::DIFFUSE_MAP;
+                        break;
+                    case obj::Material::Map::SPECULAR:
+                        map[unit] = osgUtil::ShaderGenCache::SPECULAR_MAP;
+                        break;
+                    // TODO add more types
+                    default:
+                        break;
+                }
+            }
+        }
+        else
+        {
+            map[0] = osgUtil::ShaderGenCache::DIFFUSE_MAP;
+            map[4] = osgUtil::ShaderGenCache::SPECULAR_MAP;
+        }
+
         osg::Node* node = convertModelToSceneGraph(model, localOptions, local_opt.get());
+        osgUtil::ShaderGenCache *cache = new osgUtil::ShaderGenCache(map);
+
+        osgUtil::ShaderGenVisitor * _visitor = new osgUtil::ShaderGenVisitor(cache);
+        _visitor->reset();
+        node->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::ON);
+        _visitor->setRootStateSet(node->getOrCreateStateSet());
+        node->accept(*_visitor);
         return node;
     }
 
