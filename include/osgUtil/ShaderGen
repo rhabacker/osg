@@ -34,8 +34,9 @@ public:
         BLEND = 1,
         LIGHTING = 2,
         FOG = 4,
-        DIFFUSE_MAP = 8, //< Texture in unit 0
-        NORMAL_MAP = 16  //< Texture in unit 1 and vertex attribute array 6
+        DIFFUSE_MAP = 8, //< Texture in unit 0 if not TextureUnitsMap has been provided
+        NORMAL_MAP = 16,  //< Texture in unit 1 and vertex attribute array 6 if not TextureUnitsMap has been provided
+        SPECULAR_MAP = 32
     };
 
     typedef std::map<int, osg::ref_ptr<osg::StateSet> > StateSetMap;

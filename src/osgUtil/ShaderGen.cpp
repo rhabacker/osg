@@ -154,6 +154,13 @@ osg::StateSet *ShaderGenCache::createStateSet(int stateMask) const
             frag << "uniform sampler2D diffuseMap;\n";
         }
 
+        if (it->second == SPECULAR_MAP && stateMask & SPECULAR_MAP)
+        {
+            osg::Uniform *specularMap = new osg::Uniform("specularMap", it->first);
+            stateSet->addUniform(specularMap);
+            frag << "uniform sampler2D specularMap;\n";
+        }
+
         if (it->second == NORMAL_MAP && stateMask & NORMAL_MAP)
         {
             osg::Uniform *normalMap = new osg::Uniform("normalMap", it->first);
@@ -169,7 +176,7 @@ osg::StateSet *ShaderGenCache::createStateSet(int stateMask) const
         "{\n"\
         "  gl_Position = ftransform();\n";
 
-    if (stateMask & (DIFFUSE_MAP | NORMAL_MAP))
+    if (stateMask & (DIFFUSE_MAP | NORMAL_MAP | SPECULAR_MAP))
     {
         vert << "  gl_TexCoord[0] = gl_MultiTexCoord0;\n";
     }
@@ -231,12 +238,21 @@ osg::StateSet *ShaderGenCache::createStateSet(int stateMask) const
         frag << "  vec4 base = vec4(1.0);\n";
     }
 
+    if (stateMask & SPECULAR_MAP)
+    {
+        frag << "  vec4 spec = texture2D(specularMap, gl_TexCoord[0].st);\n";
+    }
+    else
+    {
+        frag << "  vec4 spec = vec4(1.0);\n";
+    }
+
     if (stateMask & NORMAL_MAP)
     {
         frag << "  vec3 normalDir = texture2D(normalMap, gl_TexCoord[0].st).xyz*2.0-1.0;\n";
     }
 
-    if (stateMask & (LIGHTING | NORMAL_MAP))
+    if (stateMask & (LIGHTING | NORMAL_MAP | SPECULAR_MAP))
     {
         frag <<
             "  vec3 nd = normalize(normalDir);\n"\
@@ -250,7 +266,7 @@ osg::StateSet *ShaderGenCache::createStateSet(int stateMask) const
             "  if (diff > 0.0)\n"\
             "  {\n"\
             "    vec3 halfDir = normalize(ld+vd);\n"\
-            "    color.rgb += base.a * gl_FrontLightProduct[0].specular.rgb * \n"\
+            "    color.rgb += base.a * spec.rgb * gl_FrontLightProduct[0].specular.rgb * \n"\
             "      pow(max(dot(halfDir, nd), 0.0), gl_FrontMaterial.shininess);\n"\
             "  }\n";
     }
