@@ -275,39 +275,21 @@ void ReaderWriterOBJ::buildMaterialToStateSetMap(obj::Model& model, MaterialToSt
 {
     if (localOptions.fixBlackMaterials)
     {
-        // hack to fix Maya exported models that contian all black materials.
-        int numBlack = 0;
-        int numNotBlack = 0;
+        // hack to fix Maya exported models that contain all black materials.
+        osg::Vec4 black(0.0f,0.0f,0.0f,1.0f);
         obj::Model::MaterialMap::iterator itr;
         for(itr = model.materialMap.begin();
             itr != model.materialMap.end();
             ++itr)
         {
             obj::Material& material = itr->second;
-            if (material.ambient==osg::Vec4(0.0f,0.0f,0.0f,1.0f) &&
-                material.diffuse==osg::Vec4(0.0f,0.0f,0.0f,1.0f))
+            if (material.ambient==black &&
+                material.diffuse==black)
             {
-                ++numBlack;
-            }
-            else
-            {
-                ++numNotBlack;
-            }
-        }
-
-        if (numNotBlack==0 && numBlack!=0)
-        {
-            for(itr = model.materialMap.begin();
-                itr != model.materialMap.end();
-                ++itr)
-            {
-                obj::Material& material = itr->second;
-                if (material.ambient==osg::Vec4(0.0f,0.0f,0.0f,1.0f) &&
-                    material.diffuse==osg::Vec4(0.0f,0.0f,0.0f,1.0f))
-                {
-                    material.ambient.set(0.3f,0.3f,0.3f,1.0f);
-                    material.diffuse.set(1.0f,1.0f,1.0f,1.0f);
-                }
+                material.ambient.set(0.3f,0.3f,0.3f,1.0f);
+                material.diffuse.set(1.0f,1.0f,1.0f,1.0f);
+                if (material.specular == black)
+                    material.specular.set(1.0f,1.0f,1.0f,1.0f);
             }
         }
     }
