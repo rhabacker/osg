@@ -302,6 +302,8 @@ void ReaderWriterOBJ::buildMaterialToStateSetMap(obj::Model& model, MaterialToSt
             {
                 material.ambient.set(0.3f,0.3f,0.3f,1.0f);
                 material.diffuse.set(1.0f,1.0f,1.0f,1.0f);
+                if (material.specular == black)
+                    material.specular.set(0.5f,0.5f,0.5f,1.0f);
             }
         }
     }
