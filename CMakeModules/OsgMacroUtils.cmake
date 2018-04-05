@@ -285,11 +285,26 @@ MACRO(SETUP_PLUGIN PLUGIN_NAME)
     ELSE (DYNAMIC_OPENSCENEGRAPH)
         ADD_LIBRARY(${TARGET_TARGETNAME} STATIC ${TARGET_SRC} ${TARGET_H})
     ENDIF(DYNAMIC_OPENSCENEGRAPH)
-
     IF(MSVC)
-        IF(NOT CMAKE24)
+        IF(CMAKE_MAJOR_VERSION EQUAL 3)
+            IF(OSG_MSVC_VERSIONED_DLL)
+                IF(NOT MSVC_IDE)
+                    SET_TARGET_PROPERTIES(${TARGET_TARGETNAME} PROPERTIES PREFIX "../bin/${OSG_PLUGINS}/")
+                ELSE(NOT MSVC_IDE)
+                    SET_TARGET_PROPERTIES(${TARGET_TARGETNAME} PROPERTIES PREFIX "../../bin/${OSG_PLUGINS}/" IMPORT_PREFIX "../")
+                ENDIF(NOT MSVC_IDE)
+
+            ELSE(OSG_MSVC_VERSIONED_DLL)
+
+                #in standard mode (unversioned) the .lib and .dll are placed in lib/<debug or release>/${OSG_PLUGINS}.
+                #here the PREFIX property has been used, the same result would be accomplidhe by prepending ${OSG_PLUGINS}/ to OUTPUT_NAME target property
+
+                SET_TARGET_PROPERTIES(${TARGET_TARGETNAME} PROPERTIES PREFIX "${OSG_PLUGINS}/")
+            ENDIF(OSG_MSVC_VERSIONED_DLL)
+
+        ELSEIF(NOT CMAKE24)
             SET_OUTPUT_DIR_PROPERTY_260(${TARGET_TARGETNAME} "${OSG_PLUGINS}")        # Sets the ouput to be /osgPlugin-X.X.X ; also ensures the /Debug /Release are removed
-        ELSE(NOT CMAKE24)
+        ELSE()
 
             IF(OSG_MSVC_VERSIONED_DLL)
 
@@ -314,7 +329,7 @@ MACRO(SETUP_PLUGIN PLUGIN_NAME)
                 SET_TARGET_PROPERTIES(${TARGET_TARGETNAME} PROPERTIES PREFIX "${OSG_PLUGINS}/")
             ENDIF(OSG_MSVC_VERSIONED_DLL)
 
-        ENDIF(NOT CMAKE24)
+        ENDIF()
     ENDIF(MSVC)
 
     SET_TARGET_PROPERTIES(${TARGET_TARGETNAME} PROPERTIES PROJECT_LABEL "${TARGET_LABEL}")
@@ -486,26 +501,29 @@ ENDMACRO(SETUP_COMMANDLINE_EXAMPLE)
 
 # Takes two optional arguments -- osg prefix and osg version
 MACRO(HANDLE_MSVC_DLL)
+    # LIB_PREFIX: use "osg" by default, else whatever we've been given.
+    IF(${ARGC} GREATER 0)
+            SET(LIB_PREFIX ${ARGV0})
+    ELSE(${ARGC} GREATER 0)
+            SET(LIB_PREFIX osg)
+    ENDIF(${ARGC} GREATER 0)
+
+    # LIB_SOVERSION: use OSG's soversion by default, else whatever we've been given
+    IF(${ARGC} GREATER 1)
+            SET(LIB_SOVERSION ${ARGV1})
+    ELSE(${ARGC} GREATER 1)
+            SET(LIB_SOVERSION ${OPENSCENEGRAPH_SOVERSION})
+    ENDIF(${ARGC} GREATER 1)
+
+    IF(CMAKE_MAJOR_VERSION EQUAL 3)
+        SET_TARGET_PROPERTIES(${LIB_NAME} PROPERTIES PREFIX "${LIB_PREFIX}${LIB_SOVERSION}-")
+    ELSE()
         #this is a hack... the build place is set to lib/<debug or release> by LIBARARY_OUTPUT_PATH equal to OUTPUT_LIBDIR
         #the .lib will be crated in ../ so going straight in lib by the IMPORT_PREFIX property
         #because we want dll placed in OUTPUT_BINDIR ie the bin folder sibling of lib, we can use ../../bin to go there,
         #it is hardcoded, we should compute OUTPUT_BINDIR position relative to OUTPUT_LIBDIR ... to be implemented
         #changing bin to something else breaks this hack
         #the dll are versioned by prefixing the name with osg${OPENSCENEGRAPH_SOVERSION}-
-
-        # LIB_PREFIX: use "osg" by default, else whatever we've been given.
-        IF(${ARGC} GREATER 0)
-                SET(LIB_PREFIX ${ARGV0})
-        ELSE(${ARGC} GREATER 0)
-                SET(LIB_PREFIX osg)
-        ENDIF(${ARGC} GREATER 0)
-
-        # LIB_SOVERSION: use OSG's soversion by default, else whatever we've been given
-        IF(${ARGC} GREATER 1)
-                SET(LIB_SOVERSION ${ARGV1})
-        ELSE(${ARGC} GREATER 1)
-                SET(LIB_SOVERSION ${OPENSCENEGRAPH_SOVERSION})
-        ENDIF(${ARGC} GREATER 1)
 
         SET_OUTPUT_DIR_PROPERTY_260(${LIB_NAME} "")        # Ensure the /Debug /Release are removed
         IF(NOT MSVC_IDE)
@@ -545,6 +563,7 @@ MACRO(HANDLE_MSVC_DLL)
 
 #     SET_TARGET_PROPERTIES(${LIB_NAME} PROPERTIES PREFIX "../../bin/osg${OPENSCENEGRAPH_SOVERSION}-")
 #     SET_TARGET_PROPERTIES(${LIB_NAME} PROPERTIES IMPORT_PREFIX "../")
+    ENDIF()
 ENDMACRO(HANDLE_MSVC_DLL)
 
 MACRO(REMOVE_CXX_FLAG flag)
