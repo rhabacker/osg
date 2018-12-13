@@ -50,9 +50,9 @@ void VertexData::readVertices( PlyFile* file, const int nVertices,
     // temporary vertex structure for ply loading
     struct _Vertex
     {
-        float           x;
-        float           y;
-        float           z;
+        double           x;
+        double          y;
+        double          z;
         float           nx;
         float           ny;
         float           nz;
@@ -177,7 +177,16 @@ void VertexData::readVertices( PlyFile* file, const int nVertices,
     for( int i = 0; i < nVertices; ++i )
     {
         ply_get_element( file, static_cast< void* >( &vertex ) );
-        _vertices->push_back( osg::Vec3( vertex.x, vertex.y, vertex.z ) );
+		
+		if(_transform)
+		{
+			osg::Vec3d vec(vertex.x, vertex.y, vertex.z);
+			transform(vec);
+			_vertices->push_back(vec);
+		}
+		else 
+			_vertices->push_back( osg::Vec3( vertex.x, vertex.y, vertex.z ) );
+
         if (fields & NORMALS)
             _normals->push_back( osg::Vec3( vertex.nx, vertex.ny, vertex.nz ) );
 
@@ -207,6 +216,47 @@ void VertexData::readVertices( PlyFile* file, const int nVertices,
         if (fields & TEXCOORD)
             _texcoord->push_back(osg::Vec2(vertex.texture_u,vertex.texture_v));
     }
+}
+
+void VertexData::transform(osg::Vec3d& vec)
+{
+	// cut-off coordinates
+	osg::Vec3d offset(_offsetX, _offsetY, 0);
+	osg::Vec3d tmp = vec - offset;
+
+	// rotation
+	double x_ =  tmp.x()*cos(-_alpha) + tmp.y()*sin(-_alpha);
+    double y_ = -tmp.x()*sin(-_alpha) + tmp.y()*cos(-_alpha); 
+
+	vec = osg::Vec3d(x_, y_,tmp.z());
+}
+
+void VertexData::setTransformation(const osgDB::ReaderWriter::Options* options)
+{
+	// get transformation parameters
+	std::string offsetX, offsetY, alpha;
+	offsetX = offsetY = alpha = "";
+	if(options && options->getNumPluginStringData() > 0)
+	{
+		if (!options->getPluginStringData( std::string ("offset_x" )).empty())
+			offsetX = options->getPluginStringData("offset_x");
+		if (!options->getPluginStringData( std::string ("offset_y" )).empty())
+			offsetY = options->getPluginStringData("offset_y");
+		if (!options->getPluginStringData( std::string ("alpha" )).empty())
+			alpha = options->getPluginStringData("alpha");
+	}
+
+	if(!offsetX.empty() && !offsetY.empty() && !alpha.empty())
+		applyTransformation(true);
+
+	try {
+		setOffsetX(std::stod(offsetX));
+		setOffsetY(std::stod(offsetY));
+		setAlpha(std::stod(alpha));
+	} catch (const std::invalid_argument& ia) {
+		std::cerr << "Invalid argument: " << ia.what() << '\n';
+		applyTransformation(false);
+	}
 }
 
 

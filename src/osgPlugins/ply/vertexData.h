@@ -15,6 +15,7 @@
 
 #include <osg/Node>
 #include <osg/PrimitiveSet>
+#include <osgDB/ReadFile>
 
 #include <vector>
 
@@ -37,12 +38,14 @@ namespace ply
         // Default constructor
         VertexData();
 
-
         // Reads ply file and convert in to osg::Node and returns the same
         osg::Node* readPlyFile( const char* file, const bool ignoreColors = false );
 
         // to set the flag for using inverted face
-        void useInvertedFaces() { _invertFaces = true; }
+        void useInvertedFaces() { _invertFaces = true; };
+
+		// set transformation values
+		void setTransformation(const osgDB::ReaderWriter::Options* options);
 
     private:
 
@@ -67,7 +70,33 @@ namespace ply
         // Reads the triangle indices from the ply file
         void readTriangles( PlyFile* file, const int nFaces );
 
+		// Flag if vertex data should be transformed
+		void applyTransformation(bool apply) { _transform = apply; };
+		// Set X-Offset
+		void setOffsetX(double offsetX) { _offsetX = offsetX; };
+		// Set Y-Offset
+		void setOffsetY(double offsetY) { _offsetY = offsetY; };
+		// Set rotation
+		void setAlpha(double alpha) 
+		{ 
+			_alpha = alpha; 
+			_cosAlpha = cos(-_alpha);
+			_sinAlpha = sin(-_alpha);
+		};
+
+		// Transform a vector with transformation params
+		void transform(osg::Vec3d& vec);
+
         bool        _invertFaces;
+
+		/// transformation parameters
+		double		_offsetX;
+		double		_offsetY;
+		double		_alpha;
+		bool		_transform;
+		// precomputed values based on alpha
+		double		_cosAlpha;
+		double		_sinAlpha;
 
         // Vertex array in osg format
         osg::ref_ptr<osg::Vec3Array>   _vertices;

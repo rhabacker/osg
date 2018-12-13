@@ -72,6 +72,10 @@ osgDB::ReaderWriter::ReadResult ReaderWriterPLY::readNode(const std::string& fil
 
     //Instance of vertex data which will read the ply file and convert in to osg::Node
     ply::VertexData vertexData;
+
+	if(options)
+		vertexData.setTransformation(options);
+
     osg::Node* node = vertexData.readPlyFile(fileName.c_str());
 
     if (node)
