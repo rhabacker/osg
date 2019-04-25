@@ -99,7 +99,7 @@ namespace ply
 		double		_sinAlpha;
 
         // Vertex array in osg format
-        osg::ref_ptr<osg::Vec3Array>   _vertices;
+        osg::ref_ptr<osg::Vec3dArray>   _vertices;
         // Color array in osg format
         osg::ref_ptr<osg::Vec4Array>   _colors;
         osg::ref_ptr<osg::Vec4Array>   _ambient;

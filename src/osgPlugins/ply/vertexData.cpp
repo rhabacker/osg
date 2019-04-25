@@ -77,9 +77,9 @@ void VertexData::readVertices( PlyFile* file, const int nVertices,
 
     PlyProperty vertexProps[] =
     {
-        { "x", PLY_FLOAT, PLY_FLOAT, offsetof( _Vertex, x ), 0, 0, 0, 0 },
-        { "y", PLY_FLOAT, PLY_FLOAT, offsetof( _Vertex, y ), 0, 0, 0, 0 },
-        { "z", PLY_FLOAT, PLY_FLOAT, offsetof( _Vertex, z ), 0, 0, 0, 0 },
+        { "x", PLY_DOUBLE, PLY_DOUBLE, offsetof( _Vertex, x ), 0, 0, 0, 0 },
+        { "y", PLY_DOUBLE, PLY_DOUBLE, offsetof( _Vertex, y ), 0, 0, 0, 0 },
+        { "z", PLY_DOUBLE, PLY_DOUBLE, offsetof( _Vertex, z ), 0, 0, 0, 0 },
         { "nx", PLY_FLOAT, PLY_FLOAT, offsetof( _Vertex, nx ), 0, 0, 0, 0 },
         { "ny", PLY_FLOAT, PLY_FLOAT, offsetof(_Vertex, ny), 0, 0, 0, 0 },
         { "nz", PLY_FLOAT, PLY_FLOAT, offsetof(_Vertex, nz), 0, 0, 0, 0 },
@@ -135,7 +135,7 @@ void VertexData::readVertices( PlyFile* file, const int nVertices,
 
     // check whether array is valid otherwise allocate the space
     if(!_vertices.valid())
-        _vertices = new osg::Vec3Array;
+        _vertices = new osg::Vec3dArray;
 
     if( fields & NORMALS )
     {
@@ -185,7 +185,7 @@ void VertexData::readVertices( PlyFile* file, const int nVertices,
 			_vertices->push_back(vec);
 		}
 		else 
-			_vertices->push_back( osg::Vec3( vertex.x, vertex.y, vertex.z ) );
+			_vertices->push_back( osg::Vec3d( vertex.x, vertex.y, vertex.z ) );
 
         if (fields & NORMALS)
             _normals->push_back( osg::Vec3( vertex.nx, vertex.ny, vertex.nz ) );
