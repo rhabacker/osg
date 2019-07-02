@@ -145,6 +145,7 @@ ELSE()
 
     INSTALL(
         TARGETS OpenThreads
+        EXPORT OpenSceneGraph
         ARCHIVE DESTINATION lib${LIB_POSTFIX} COMPONENT libopenthreads-dev
         LIBRARY DESTINATION lib${LIB_POSTFIX} COMPONENT libopenthreads
         RUNTIME DESTINATION bin COMPONENT libopenthreads
